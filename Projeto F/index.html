@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h2, h3 {
+            color: #333;
+        }
+        input, button, select {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button, select {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover, select:hover {
+            background-color: #45a049;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #fff;
+            margin: 5px;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+        }
+        .limparItem {
+            background-color: #f44336;
+            color: white;
+            cursor: pointer;
+        }
+        .limparItem:hover {
+            background-color: #d32f2f;
+        }
+        #total {
+            color: #333;
+            font-weight: bold;
+        }
+        #resetarPagina, #limparLista {
+            background-color: #f44336;
+            margin: 0 10px;
+        }
+        #resetarPagina:hover, #limparLista:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h2>Insira os dados da lista de compras:</h2>
+
+    <label for="item">Item:</label>
+    <input type="text" id="item" placeholder="Item">
+
+    <label for="valor">Valor:</label>
+    <input type="number" id="valor" placeholder="Valor">
+
+    <button onclick="adicionarItem()">Adicionar Item</button>
+    <button id="limparLista" onclick="limparLista()">Limpar Lista</button>
+    <button id="resetarPagina" onclick="resetarPagina()">Resetar Página</button>
+
+    <h3>Lista de Compras:</h3>
+    <select id="seletorItens" onchange="mostrarBotaoLimpar()">
+        <option value="" selected>Selecione um item</option>
+    </select>
+
+    <ul id="lista"></ul>
+
+    <p id="total">Total: R$0.00</p>
+
+    <script>
+        function adicionarItem() {
+            var itemInput = document.getElementById("item");
+            var valorInput = document.getElementById("valor");
+
+            var item = itemInput.value;
+            var valor = parseFloat(valorInput.value);
+
+            if (item.trim() === "" || isNaN(valor) || valor <= 0) {
+                alert("Por favor, insira um item e um valor válido.");
+                return;
+            }
+
+            // Adiciona o item à lista
+            var lista = document.getElementById("lista");
+            var newItem = document.createElement("li");
+            newItem.innerHTML = `
+                <span>${item}</span>
+                <span>R$${valor.toFixed(2)}</span>
+                <button class="limparItem" onclick="limparItem(this)">Limpar Item</button>
+            `;
+            newItem.setAttribute('data-valor', valor);
+            lista.appendChild(newItem);
+
+            // Atualiza o total
+            var totalElement = document.getElementById("total");
+            var total = parseFloat(totalElement.textContent.replace("Total: R$", ""));
+            total += valor;
+            totalElement.textContent = `Total: R$${total.toFixed(2)}`;
+
+            // Adiciona o item ao seletor de itens
+            var seletorItens = document.getElementById("seletorItens");
+            var option = document.createElement("option");
+            option.value = item;
+            option.text = item;
+            option.setAttribute('data-valor', valor);
+            seletorItens.add(option);
+
+            // Limpa os campos de entrada
+            itemInput.value = "";
+            valorInput.value = "";
+        }
+
+        function limparItem(element) {
+            var listItem = element.parentNode;
+            var valor = parseFloat(listItem.getAttribute('data-valor'));
+
+            // Remove o item da lista
+            listItem.parentNode.removeChild(listItem);
+
+            // Remove o item do seletor de itens
+            var seletorItens = document.getElementById("seletorItens");
+            var itemOption = seletorItens.querySelector(`option[value="${listItem.querySelector('span:first-child').textContent}"]`);
+            seletorItens.removeChild(itemOption);
+
+            // Atualiza o total
+            var totalElement = document.getElementById("total");
+            var total = parseFloat(totalElement.textContent.replace("Total: R$", ""));
+            total -= valor;
+            totalElement.textContent = `Total: R$${total.toFixed(2)}`;
+
+            // Esconde o botão de limpar no seletor de itens
+            element.style.display = 'none';
+        }
+
+        function limparLista() {
+            document.getElementById("lista").innerHTML = "";
+            document.getElementById("seletorItens").innerHTML = '<option value="" selected>Selecione um item</option>';
+            document.getElementById("total").textContent = "Total: R$0.00";
+        }
+
+        function resetarPagina() {
+            location.reload();
+        }
+
+        function mostrarBotaoLimpar() {
+            var seletorItens = document.getElementById("seletorItens");
+            var selectedOption = seletorItens.options[seletorItens.selectedIndex];
+            var botaoLimparItem = document.querySelector(`li:contains('${selectedOption.value}') .limparItem`);
+
+            // Esconde todos os botões de limpar
+            document.querySelectorAll('.limparItem').forEach(function (botao) {
+                botao.style.display = 'none';
+            });
+
+            // Mostra o botão de limpar apenas para o item selecionado
+            if (botaoLimparItem) {
+                botaoLimparItem.style.display = 'block';
+            }
+        }
+
+        // Função auxiliar para encontrar elementos que contenham um determinado texto
+        function contains(selector, text) {
+            var elements = document.querySelectorAll(selector);
+            return Array.prototype.filter.call(elements, function(element){
+                return RegExp(text).test(element.textContent);
+            });
+        }
+    </script>
+</body>
+</html>
